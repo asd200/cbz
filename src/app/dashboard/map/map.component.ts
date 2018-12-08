@@ -16,7 +16,17 @@ export class MapComponent implements OnInit {
   ngOnInit() {
     this.db.list('POI').valueChanges().subscribe((e)=>{
       console.log(e);
-    })
+    });
+    this.getUserLocation();
+  }
+
+  public getUserLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(position => {
+        this.lat = position.coords.latitude;
+        this.lng = position.coords.longitude;
+      });
+    }
   }
 
 }
