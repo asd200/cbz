@@ -1,15 +1,12 @@
-<agm-map [latitude]="currentLatitude" [longitude]="currentLongitude">
-  <agm-marker [latitude]="currentLatitude" [longitude]="currentLongitude" [iconUrl]="'../../../assets/map/current_location_temporary.png'" ></agm-marker>
-  <agm-marker *ngFor="let marker of markers"
-              [latitude]="marker.location[0]"
-              [longitude]="marker.location[1]"
-              [iconUrl]="'https://cdn1.iconfinder.com/data/icons/designer-s-tools-1/512/Coffee-64.png'">
+<div>
+  <input type="text" placeholder="Search for location" autocorrect="off" spellcheck="false" #search>
+</div>
+<button (click)="onClickStores($event)">Stores!</button>
+<button (click)="onClickRestaurants($event)">Restaurants!</button>
+<div #gmap>
 
-    <agm-info-window>
-      <h3><strong>{{ marker.key }} Location Details</strong></h3>
+</div>
 
-      <p>You are {{ marker.distance }} kilometers from this point</p>
-    </agm-info-window>
-
-  </agm-marker>
+<agm-map  [latitude]="currentLatitude" [longitude]="currentLongitude">
+  <agm-marker [latitude]="currentLatitude" [longitude]="currentLongitude" [iconUrl]="'../../../assets/map/current_location.png'" ></agm-marker>
 </agm-map>

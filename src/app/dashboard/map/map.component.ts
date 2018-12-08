@@ -1,6 +1,6 @@
-import {Component, OnInit} from '@angular/core';
-import {AngularFireDatabase} from '@angular/fire/database';
-import {GeoService} from './geo.service';
+import {Component, ElementRef, NgZone, OnInit, ViewChild} from '@angular/core';
+import { MapsAPILoader} from '@agm/core';
+import {} from 'googlemaps';
 
 @Component({
   selector: 'app-map',
@@ -12,36 +12,69 @@ export class MapComponent implements OnInit {
   currentLatitude: number;
   currentLongitude: number;
 
-  markers: any;
-  subscription: any;
+  @ViewChild('search') public searchElement: ElementRef;
 
-  constructor(private db: AngularFireDatabase, private geo: GeoService) {
-    this.seedDatabase();
-  }
+  @ViewChild('gmap') gmapElement: any;
+
+  service: any;
+
+  constructor(private mapsAPILoader: MapsAPILoader,
+              private ngZone: NgZone) {}
 
   ngOnInit() {
-    this.db.list('POI').valueChanges().subscribe((e) => {
-      console.log(e);
+
+    // Tutaj jest przykładowa implementacja podpowiedzi wyszukiwania
+    this.mapsAPILoader.load().then(() => {
+      const autocomplete = new google.maps.places.Autocomplete(this.searchElement.nativeElement, {types: ['address']});
+      autocomplete.addListener('place_changed', () => {
+        this.ngZone.run( () => {
+          const place: any = autocomplete.getPlace();
+
+          console.log(place);
+
+          if (place.geometry === undefined || place.geometry === null) {
+            return;
+          }
+        });
+      });
     });
+
+    // Ustawienie lokalizacji użytkownika
     this.getUserLocation();
-    this.subscription = this.geo.hits
-      .subscribe(hits => this.markers = hits);
   }
 
-  private seedDatabase() {
-    let dummyPoints = [
-      [52.9, 21.1],
-      [52.7, 21.2],
-      [52.1, 21.3],
-      [52.3, 21.0],
-      [52.7, 21.1]
-    ];
 
-    dummyPoints.forEach((val, idx) => {
-      let name = `dummy-location-${idx}`;
-      console.log(idx);
-      this.geo.setLocation(name, val);
-    });
+  // Odpowiedz na zapytanie 'Nearby search'
+  private callback(results, status) {
+    console.log('Status ' + status);
+    if (status === google.maps.places.PlacesServiceStatus.OK) {
+      console.log(results);
+      for (let i = 0; i < results.length; i++) {
+        console.log(results[i]);
+        console.log('Lat: ' + results[i].geometry.location.lat());
+        console.log('Lng: ' + results[i].geometry.location.lng());
+      }
+    }
+  }
+
+  // Tutaj jest przykładowa implementacja wyszukiwania sklepów w okolicy
+  public onClickStores(event) {
+    const myMap = new google.maps.places.PlacesService(this.gmapElement.nativeElement);
+    myMap.nearbySearch({
+      location: new google.maps.LatLng(this.currentLatitude, this.currentLongitude),
+      radius: 400,
+      type: 'store'
+    }, this.callback);
+  }
+
+  // Tutaj jest przykładowa implementacja wyszukiwania restauracji w okolicy
+  public onClickRestaurants(event) {
+    const myMap = new google.maps.places.PlacesService(this.gmapElement.nativeElement);
+    myMap.nearbySearch({
+      location: new google.maps.LatLng(this.currentLatitude, this.currentLongitude),
+      radius: 400,
+      type: 'restaurant'
+    }, this.callback);
   }
 
   public getUserLocation() {
@@ -50,8 +83,6 @@ export class MapComponent implements OnInit {
         this.currentLatitude = position.coords.latitude;
         this.currentLongitude = position.coords.longitude;
         console.log('Current location: lat - ' + this.currentLatitude + ' & lng - ' + this.currentLongitude);
-
-        this.geo.getLocations(50, [this.currentLatitude, this.currentLongitude]);
       });
     }
   }

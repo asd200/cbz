@@ -7,7 +7,6 @@ import {AngularFireDatabase} from "@angular/fire/database-deprecated";
 import {AngularFireDatabaseModule} from "@angular/fire/database";
 import {AngularFireModule} from "@angular/fire";
 import {environment} from "../../environments/environment";
-import {GeoService} from './map/geo.service';
 
 @NgModule({
   declarations: [
@@ -16,12 +15,13 @@ import {GeoService} from './map/geo.service';
   imports: [
     CommonModule,
     AgmCoreModule.forRoot({
-      apiKey: 'AIzaSyCEjhE_UCQE-lGbuwipRCJHqCqB4RH5eDI'
+      apiKey: 'AIzaSyCEjhE_UCQE-lGbuwipRCJHqCqB4RH5eDI',
+      libraries: ['places']
     }),
     AngularFireModule.initializeApp(environment.firebase),
     AngularFireDatabaseModule,
   ],
-  providers: [MapService, GeoService]
+  providers: [MapService]
 })
 export class DashboardModule {
 }
