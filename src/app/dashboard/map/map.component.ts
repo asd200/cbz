@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import {AngularFireDatabase} from "@angular/fire/database";
+import {AngularFireDatabase} from '@angular/fire/database';
 
 @Component({
   selector: 'app-map',
@@ -8,13 +8,13 @@ import {AngularFireDatabase} from "@angular/fire/database";
 })
 export class MapComponent implements OnInit {
 
-  lat: number = 51.678418;
-  lng: number = 7.809007;
+  currentLatitude: number;
+  currentLongitude: number;
 
   constructor(private db: AngularFireDatabase) { }
 
   ngOnInit() {
-    this.db.list('POI').valueChanges().subscribe((e)=>{
+    this.db.list('POI').valueChanges().subscribe((e) => {
       console.log(e);
     });
     this.getUserLocation();
@@ -23,8 +23,8 @@ export class MapComponent implements OnInit {
   public getUserLocation() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(position => {
-        this.lat = position.coords.latitude;
-        this.lng = position.coords.longitude;
+        this.currentLatitude = position.coords.latitude;
+        this.currentLongitude = position.coords.longitude;
       });
     }
   }
