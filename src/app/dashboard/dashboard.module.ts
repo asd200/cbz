@@ -7,6 +7,7 @@ import {AngularFireDatabase} from "@angular/fire/database-deprecated";
 import {AngularFireDatabaseModule} from "@angular/fire/database";
 import {AngularFireModule} from "@angular/fire";
 import {environment} from "../../environments/environment";
+import {GeoService} from './map/geo.service';
 
 @NgModule({
   declarations: [
@@ -20,7 +21,7 @@ import {environment} from "../../environments/environment";
     AngularFireModule.initializeApp(environment.firebase),
     AngularFireDatabaseModule,
   ],
-  providers: [MapService]
+  providers: [MapService, GeoService]
 })
 export class DashboardModule {
 }
