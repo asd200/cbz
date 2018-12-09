@@ -25,8 +25,8 @@ export interface DisabilityFlags {
 
 
 export interface Coordinations {
-  lat: number;
-  lng: number;
+  lat: Number;
+  lng: Number;
 }
 
 export interface Address {
@@ -59,6 +59,15 @@ export interface Poi {
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.scss'],
   animations: [
+    trigger('animationOption1', [
+      transition(':enter', [
+        style({width: '0'}),
+        animate(300)
+      ]),
+      transition(':leave', [
+        animate(300, style({width: 0}))
+      ]),
+    ]),
     trigger('animationOption2', [
       transition(':enter', [
         style({height: '0'}),
@@ -75,10 +84,11 @@ export class MapComponent implements OnInit {
 
   currentLocation: Coordinations;
   destination: Coordinations;
-  currentMapViewLatitude: number;
-  currentMapViewLongitude: number;
+  currentMapViewLatitude: Number;
+  currentMapViewLongitude: Number;
   markerIsClicked: boolean = false;
   wrapperMarkerInfo: Poi;
+  dashboardVisible: boolean = false;
 
   form: FormGroup;
   poiList$: Observable<{}>;
@@ -128,7 +138,12 @@ export class MapComponent implements OnInit {
   }
 
   updatePoi(poi: Poi): void {
-    this.db.object('/poi_fullinfo/' + poi.key).update(poi);
+    console.log(poi);
+    if (poi.key) {
+      this.db.object('/poi_fullinfo/' + poi.key).update(poi);
+    } else {
+      this.db.list('poi_fullinfo').push(poi);
+    }
   }
 
 
@@ -152,16 +167,19 @@ export class MapComponent implements OnInit {
     this.poiPlacesList = []
     const myMap = new google.maps.places.PlacesService(this.gmapElement.nativeElement);
     myMap.nearbySearch({
+      // @ts-ignore
       location: new google.maps.LatLng(this.currentLocation.lat, this.currentLocation.lng),
       radius: 2000,
       type: type
     }, (results, status) => {
       if (status === google.maps.places.PlacesServiceStatus.OK) {
         for (let i = 0; i < results.length; i++) {
-          const lat = results[i].geometry.location.lat().toString();
-          const lng = results[i].geometry.location.lng().toString();
+          console.log(results[i])
+          const lat = results[i].geometry.location.lat();
+          const lng = results[i].geometry.location.lng();
+          const name = results[i].name.toString();
           // this.poiPlacesList.push({ lat: lat, lng: lng });
-          this.poiPlacesList[i] = {lat: lat, lng: lng}
+          this.poiPlacesList[i] = {lat: lat, lng: lng, name: name}
         }
         console.log(this.poiPlacesList)
       }
@@ -185,8 +203,7 @@ export class MapComponent implements OnInit {
 
   public addPoiToDatabase(coords) {
     const poi = {
-      uniqueId: 'SADasd',
-      name: 'SsadAD',
+      name: 'Punkt na mapie',
       location: coords,
       email: 'email@gmail.pl',
       phone: '748 828 273',
@@ -214,15 +231,52 @@ export class MapComponent implements OnInit {
     this.db.list('poi_fullinfo').push(poi);
   }
 
-  public markerClicked(poi: any) {
-    this.markerIsClicked = true;
-    this.currentMapViewLatitude = poi.location.coords.lat;
-    this.currentMapViewLongitude = poi.location.coords.lng;
+  public markerClicked(poi: any, saveToDatabase?: boolean) {
+    if (saveToDatabase) {
+      console.log(poi)
+      const poiToAdd: any = {
+        name: poi.name,
+        location: {coords: poi},
+        email: 'email@gmail.pl',
+        phone: '748 828 273',
+        disabilityAccess: [{
+          name: 'wheelchair',
+          checked: true,
+        }, {
+          name: 'deaf',
+          checked: true,
+        }, {
+          name: 'sign_language',
+          checked: true,
+        }, {
+          name: 'blind',
+          checked: true,
+        }, {
+          name: 'parking',
+          checked: true,
+        }, {
+          name: 'wc',
+          checked: true,
+        }],
+      };
+      this.markerIsClicked = true;
+      this.currentMapViewLatitude = poiToAdd.location.coords.lat;
+      this.currentMapViewLongitude = poiToAdd.location.coords.lng;
+      this.wrapperMarkerInfo = poiToAdd;
+      return
+    }
 
-    this.wrapperMarkerInfo = poi;
+    if (!saveToDatabase) {
+      console.log(poi)
+      this.markerIsClicked = true;
+      this.currentMapViewLatitude = poi.location.coords.lat;
+      this.currentMapViewLongitude = poi.location.coords.lng;
+      this.wrapperMarkerInfo = poi;
+    }
   }
 
   public getRoute(poi): void {
+    console.log(poi)
     this.destination = {
       lat: poi.location.coords.lat,
       lng: poi.location.coords.lng,

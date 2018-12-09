@@ -1,12 +1,18 @@
 <!--<div class="search-wrapper">-->
   <!--<input type="text" placeholder="Search for location" autocorrect="off" spellcheck="false" #search>-->
 <!--</div>-->
-<div class="buttons-wrapper">
+<div class="search-buttons-wrapper">
 <button class="absolute-button" (click)="onClickPlace('store')" mat-raised-button>Sklepy</button>
 <button class="absolute-button" (click)="onClickPlace('restaurant')" mat-raised-button>Restauracje</button>
 </div>
 <div #gmap>
 </div>
+
+<!--<i (click)="dashboardVisible = !dashboardVisible" class="material-icons menu open-dash">menu</i>-->
+<div class="dashboard-panel" *ngIf="dashboardVisible" [@animationOption1]>
+  <img src="./assets/images/profile.png" alt="">
+</div>
+
 <agm-map #agmMap [zoom]="12" [latitude]="currentMapViewLatitude" [longitude]="currentMapViewLongitude"
          (mapDblClick)="addPoiToDatabase($event)"
          [zoomControl]="false" [streetViewControl]="false" (mapClick)="mapClick($event)" [usePanning]="true"
@@ -22,10 +28,10 @@
               (markerClick)="markerClicked(poi)" >
   </agm-marker>
 
-  <agm-marker *ngFor="let poi of poiPlacesList; let i = index" [latitude]="poi.lat"
+  <agm-marker *ngFor="let poi of poiPlacesList" [latitude]="poi.lat"
               [longitude]="poi.lng"
               [iconUrl]="{ url: './assets/map/poi_places.svg', scaledSize: {'height': 40, 'width': 25}}"
-              (markerClick)="markerClicked(poi)" >
+              (markerClick)="markerClicked(poi, true)" >
   </agm-marker>
 
   <agm-direction [origin]="currentLocation ? currentLocation : ''" [destination]="destination ? destination : ''">
@@ -38,12 +44,17 @@
   <div class="wrapped-info">
     <i (click)="markerIsClicked = false" class="material-icons close">close</i>
     <div *ngIf="wrapperMarkerInfo">
-      <span class="title">{{wrapperMarkerInfo.name}}</span> Wyznacz trasę <br/>
-      <span *ngFor="let disability of wrapperMarkerInfo.disabilityAccess">
-        <img [ngClass]="{checked: disability.checked}" (click)="disability.checked = !disability.checked; updatePoi(wrapperMarkerInfo)" class="disability-icon" src="./assets/disabilities/{{disability.name}}.png" alt="">
-      </span>
+      <p class="title">
+        <span class="title-wrapper">{{wrapperMarkerInfo.name}} </span>
+        <span class="route" (click)="getRoute(wrapperMarkerInfo)"><img src="./assets/icons/get-route.png" alt="">Wyznacz trasę</span>
+      </p>
+      <ul class="icons-wrapper">
+        <li *ngFor="let disability of wrapperMarkerInfo.disabilityAccess" [ngClass]="{'checked': disability.checked}" >
+          <img (click)="disability.checked = !disability.checked; updatePoi(wrapperMarkerInfo)" class="disability-icon" src="./assets/disabilities/{{disability.name}}.png" alt="">
+        </li>
+      </ul>
       <div class="buttons-wrapper">
-        <button class="get-route" (click)="getRoute(wrapperMarkerInfo)" mat-raised-button></button>
+        <!--<button class="get-route" (click)="getRoute(wrapperMarkerInfo)" mat-raised-button>Wyznacz trasę</button>-->
         <!--<button class="get-route" (click)="getRoute(wrapperMarkerInfo)" mat-raised-button>Dodaj opinię</button>-->
       </div>
       <!--<form [formGroup]="form">-->
