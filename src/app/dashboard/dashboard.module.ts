@@ -3,10 +3,13 @@ import {CommonModule} from '@angular/common';
 import {MapComponent} from './map/map.component';
 import {MapService} from "./map/map.service";
 import {AgmCoreModule} from "@agm/core";
-import {AngularFireDatabase} from "@angular/fire/database-deprecated";
 import {AngularFireDatabaseModule} from "@angular/fire/database";
 import {AngularFireModule} from "@angular/fire";
 import {environment} from "../../environments/environment";
+import {AgmSnazzyInfoWindowModule} from "@agm/snazzy-info-window";
+import {AgmDirectionModule} from "agm-direction";
+import {MatButtonModule, MatCheckboxModule} from "@angular/material";
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -19,6 +22,12 @@ import {environment} from "../../environments/environment";
     }),
     AngularFireModule.initializeApp(environment.firebase),
     AngularFireDatabaseModule,
+    AgmSnazzyInfoWindowModule,
+    AgmDirectionModule,
+    MatButtonModule,
+    MatCheckboxModule,
+    FormsModule,
+    ReactiveFormsModule
   ],
   providers: [MapService]
 })

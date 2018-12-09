@@ -1,4 +1,43 @@
-<agm-map [latitude]="lat" [longitude]="lng" (mapDblClick)="setPoi($event)">
-  <agm-marker [latitude]="lat" [longitude]="lng"> </agm-marker>
-  <agm-marker *ngFor="let poi of listOfPois" [latitude]="poi.lat" [longitude]="poi.lng"></agm-marker>
+<agm-map #agmMap [zoom]="12" [latitude]="currentMapViewLatitude" [longitude]="currentMapViewLongitude"
+         (mapDblClick)="addPoiToDatabase($event)"
+         [zoomControl]="false" [streetViewControl]="false" (mapClick)="mapClick($event)" [usePanning]="true"
+         (boundsChange)="mapBoundsChanged($event)">
+
+  <agm-marker [latitude]="currentLocation ? currentLocation.lat : ''"
+              [longitude]="currentLocation ? currentLocation.lng : ''"
+              [iconUrl]="{ url: './assets/map/dot.svg', scaledSize: {'height': 20, 'width': 20}}" [markerClickable]="false" [className]="'current-location'"></agm-marker>
+
+  <agm-marker *ngFor="let poi of (poiList$ | async); let i = index" [latitude]="poi.location.coords.lat"
+              [longitude]="poi.location.coords.lng"
+              [iconUrl]="{ url: './assets/map/poi.svg', scaledSize: {'height': 40, 'width': 25}}"
+              (markerClick)="markerClicked(poi, i)" >
+  </agm-marker>
+
+  <agm-direction [origin]="currentLocation ? currentLocation : ''" [destination]="destination ? destination : ''">
+  </agm-direction>
+
 </agm-map>
+
+
+<div class="info-wrapper" *ngIf="markerIsClicked" [@animationOption2]>
+  <div class="wrapped-info">
+    <i (click)="markerIsClicked = false" class="material-icons close"></i>
+    <div *ngIf="wrapperMarkerInfo">
+      <span class="title">{{wrapperMarkerInfo.name}}</span><br/>
+      <span *ngFor="let disability of wrapperMarkerInfo.disabilityAccess">
+        <img [ngClass]="{checked: disability.checked}" (click)="disability.checked = !disability.checked; updatePoi(wrapperMarkerInfo)" class="disability-icon" src="./assets/disabilities/{{disability.name}}.png" alt="">
+      </span>
+      <div class="buttons-wrapper">
+        <button class="get-route" (click)="getRoute(wrapperMarkerInfo)" mat-raised-button>Wyznacz trasę</button>
+        <button class="get-route" (click)="getRoute(wrapperMarkerInfo)" mat-raised-button>Dodaj opinię</button>
+      </div>
+      <!--<form [formGroup]="form">-->
+      <!--<div *ngFor="let disabilitity of disabilities.controls; let i=index">-->
+      <!--<input id="disabilitity{{i}}" type="checkbox" [formControl]="disabilitity"/>-->
+      <!--<label for="disabilitity{{i}}">{{wrapperMarkerInfo.disabilityAccess[i].name}}</label>-->
+      <!--</div>-->
+      <!--</form>-->
+      <!--<span (click)="updatePoi(wrapperMarkerInfo)">Zaktualizuj</span>-->
+    </div>
+  </div>
+</div>
