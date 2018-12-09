@@ -1,6 +1,14 @@
 import {Component, ElementRef, NgZone, OnInit, ViewChild} from '@angular/core';
-import { MapsAPILoader} from '@agm/core';
+import {MapsAPILoader} from '@agm/core';
 import {} from 'googlemaps';
+import {HttpClient, HttpErrorResponse} from '@angular/common/http';
+
+interface UserResponse {
+  login: string;
+  bio: string;
+  company: string;
+}
+
 
 @Component({
   selector: 'app-map',
@@ -19,15 +27,49 @@ export class MapComponent implements OnInit {
   service: any;
 
   constructor(private mapsAPILoader: MapsAPILoader,
-              private ngZone: NgZone) {}
+              private ngZone: NgZone,
+              private http: HttpClient) {
+  }
 
   ngOnInit() {
+
+    // Przykład REST API - Get
+    this.http.get<UserResponse>('https://api.github.com/users/seeschweiler').subscribe(
+      data => {
+        console.log('User Login: ' + data.login);
+        console.log('Bio: ' + data.bio);
+        console.log('Company: ' + data.company);
+      },
+      (err: HttpErrorResponse) => {
+        if (err.error instanceof Error) {
+          console.log('Client-side error occured.');
+        } else {
+          console.log('Server-side error occured.');
+        }
+      }
+    );
+
+    // Przykład REST API - Post
+    const req = this.http.post('http://jsonplaceholder.typicode.com/posts', {
+      title: 'foo',
+      body: 'bar',
+      userId: 1
+    })
+      .subscribe(
+        res => {
+          console.log(res);
+        },
+        err => {
+          console.log('Error occured');
+        }
+      );
+
 
     // Tutaj jest przykładowa implementacja podpowiedzi wyszukiwania
     this.mapsAPILoader.load().then(() => {
       const autocomplete = new google.maps.places.Autocomplete(this.searchElement.nativeElement, {types: ['address']});
       autocomplete.addListener('place_changed', () => {
-        this.ngZone.run( () => {
+        this.ngZone.run(() => {
           const place: any = autocomplete.getPlace();
 
           console.log(place);

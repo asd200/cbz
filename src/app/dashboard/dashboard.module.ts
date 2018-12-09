@@ -7,6 +7,7 @@ import {AngularFireDatabase} from "@angular/fire/database-deprecated";
 import {AngularFireDatabaseModule} from "@angular/fire/database";
 import {AngularFireModule} from "@angular/fire";
 import {environment} from "../../environments/environment";
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   declarations: [
@@ -20,6 +21,7 @@ import {environment} from "../../environments/environment";
     }),
     AngularFireModule.initializeApp(environment.firebase),
     AngularFireDatabaseModule,
+    HttpClientModule,
   ],
   providers: [MapService]
 })

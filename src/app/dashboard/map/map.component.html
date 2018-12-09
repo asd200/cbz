@@ -8,5 +8,10 @@
 </div>
 
 <agm-map  [latitude]="currentLatitude" [longitude]="currentLongitude">
-  <agm-marker [latitude]="currentLatitude" [longitude]="currentLongitude" [iconUrl]="'../../../assets/map/current_location.png'" ></agm-marker>
+  <agm-marker [latitude]="currentLatitude" [longitude]="currentLongitude" [iconUrl]="'../../../assets/map/current_location_temporary.png'" ></agm-marker>
+  <agm-marker *ngFor="let marker of arr"
+              [latitude]="marker.lat"
+              [longitude]="marker.lng">
+  </agm-marker>
+
 </agm-map>
