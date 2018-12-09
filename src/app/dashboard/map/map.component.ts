@@ -1,7 +1,7 @@
 import {Component, ElementRef, NgZone, OnInit, ViewChild} from '@angular/core';
 import {MapsAPILoader} from '@agm/core';
 import {} from 'googlemaps';
-import {HttpClient, HttpErrorResponse} from '@angular/common/http';
+import {HttpClient, HttpErrorResponse, HttpHeaders} from '@angular/common/http';
 
 interface UserResponse {
   login: string;
@@ -9,6 +9,20 @@ interface UserResponse {
   company: string;
 }
 
+// struktury do wysyłania
+interface CurrentLocation {
+  lat: string;
+  lng: string;
+}
+
+interface User {
+  id: string;
+}
+
+interface UpdateLocation {
+  user: User;
+  currentLocation: CurrentLocation;
+}
 
 @Component({
   selector: 'app-map',
@@ -16,6 +30,10 @@ interface UserResponse {
   styleUrls: ['./map.component.scss']
 })
 export class MapComponent implements OnInit {
+
+  serverAPI = 'http://10.24.0.66:8080/';
+
+  private updateLocation: UpdateLocation;
 
   currentLatitude: number;
   currentLongitude: number;
@@ -26,7 +44,7 @@ export class MapComponent implements OnInit {
 
   service: any;
 
-  timeLeft: number = 6;
+  timeLeft = 6;
   interval;
 
   constructor(private mapsAPILoader: MapsAPILoader,
@@ -36,12 +54,17 @@ export class MapComponent implements OnInit {
 
   ngOnInit() {
 
+    // Ustawienie lokalizacji użytkownika
+    this.getUserLocation();
+
     // Przykład REST API - Get
-    this.http.get<UserResponse>('https://api.github.com/users/seeschweiler').subscribe(
+    const head = new HttpHeaders();
+    head.append('Access-Control-Allow-Headers', 'Content-Type');
+    head.append('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    head.append('Access-Control-Allow-Origin', '*');
+    this.http.get(this.serverAPI + 'view/disabilities', {headers: head}).subscribe(
       data => {
-        console.log('User Login: ' + data.login);
-        console.log('Bio: ' + data.bio);
-        console.log('Company: ' + data.company);
+        console.log(data);
       },
       (err: HttpErrorResponse) => {
         if (err.error instanceof Error) {
@@ -52,44 +75,30 @@ export class MapComponent implements OnInit {
       }
     );
 
-    // Przykład REST API - Post
-    const req = this.http.post('http://jsonplaceholder.typicode.com/posts', {
-      title: 'foo',
-      body: 'bar',
-      userId: 1
-    })
-      .subscribe(
-        res => {
-          console.log(res);
-        },
-        err => {
-          console.log('Error occured');
-        }
-      );
 
-    // Przykładowa implementacja timera, który regularnie łączy się z zewnętrznym API
-    // w naszym przypadku można byłoby tak zrobić update lokalizacji
-    this.interval = setInterval(() => {
-      if (this.timeLeft > 0) {
-        this.http.get<UserResponse>('https://api.github.com/users/seeschweiler').subscribe(
-          data => {
-            console.log('User Login: ' + data.login);
-            console.log('Bio: ' + data.bio);
-            console.log('Company: ' + data.company);
-          },
-          (err: HttpErrorResponse) => {
-            if (err.error instanceof Error) {
-              console.log('Client-side error occured.');
-            } else {
-              console.log('Server-side error occured.');
-            }
-          }
-        );
-        this.timeLeft--;
-      } else {
-        this.timeLeft = 60;
-      }
-    }, 5000)
+    // // Przykładowa implementacja timera, który regularnie łączy się z zewnętrznym API
+    // // w naszym przypadku można byłoby tak zrobić update lokalizacji
+    // this.interval = setInterval(() => {
+    //   if (this.timeLeft > 0) {
+    //     this.http.get<UserResponse>('https://api.github.com/users/seeschweiler').subscribe(
+    //       data => {
+    //         console.log('User Login: ' + data.login);
+    //         console.log('Bio: ' + data.bio);
+    //         console.log('Company: ' + data.company);
+    //       },
+    //       (err: HttpErrorResponse) => {
+    //         if (err.error instanceof Error) {
+    //           console.log('Client-side error occured.');
+    //         } else {
+    //           console.log('Server-side error occured.');
+    //         }
+    //       }
+    //     );
+    //     this.timeLeft--;
+    //   } else {
+    //     this.timeLeft = 60;
+    //   }
+    // }, 5000)
 
 
     // Tutaj jest przykładowa implementacja podpowiedzi wyszukiwania
@@ -108,8 +117,7 @@ export class MapComponent implements OnInit {
       });
     });
 
-    // Ustawienie lokalizacji użytkownika
-    this.getUserLocation();
+
   }
 
 
@@ -142,9 +150,39 @@ export class MapComponent implements OnInit {
     const myMap = new google.maps.places.PlacesService(this.gmapElement.nativeElement);
     myMap.nearbySearch({
       location: new google.maps.LatLng(this.currentLatitude, this.currentLongitude),
-      radius: 400,
+      radius: 1400,
       type: 'restaurant'
     }, this.callback);
+  }
+
+  public sendUpdatePost() {
+    // Przykład REST API - Post
+    this.updateLocation = {user: {
+        id: 'UserId123'
+      },
+      currentLocation: {
+        lat: this.currentLatitude.toString(),
+        lng: this.currentLongitude.toString()
+      }
+    };
+
+    const head = new HttpHeaders();
+    head.append('Access-Control-Allow-Headers', 'Content-Type');
+    head.append('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    head.append('Access-Control-Allow-Origin', '*');
+    const req = this.http.post(this.serverAPI + 'update/location', this.updateLocation, {headers: head})
+      .subscribe(
+        res => {
+          console.log(res);
+        },
+        (err: HttpErrorResponse) => {
+          if (err.error instanceof Error) {
+            console.log('Client-side error occured.');
+          } else {
+            console.log('Server-side error occured.');
+          }
+        }
+      );
   }
 
   public getUserLocation() {
@@ -153,6 +191,7 @@ export class MapComponent implements OnInit {
         this.currentLatitude = position.coords.latitude;
         this.currentLongitude = position.coords.longitude;
         console.log('Current location: lat - ' + this.currentLatitude + ' & lng - ' + this.currentLongitude);
+        this.sendUpdatePost();
       });
     }
   }
