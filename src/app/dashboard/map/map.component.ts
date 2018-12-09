@@ -26,6 +26,9 @@ export class MapComponent implements OnInit {
 
   service: any;
 
+  timeLeft: number = 6;
+  interval;
+
   constructor(private mapsAPILoader: MapsAPILoader,
               private ngZone: NgZone,
               private http: HttpClient) {
@@ -63,6 +66,30 @@ export class MapComponent implements OnInit {
           console.log('Error occured');
         }
       );
+
+    // Przykładowa implementacja timera, który regularnie łączy się z zewnętrznym API
+    // w naszym przypadku można byłoby tak zrobić update lokalizacji
+    this.interval = setInterval(() => {
+      if (this.timeLeft > 0) {
+        this.http.get<UserResponse>('https://api.github.com/users/seeschweiler').subscribe(
+          data => {
+            console.log('User Login: ' + data.login);
+            console.log('Bio: ' + data.bio);
+            console.log('Company: ' + data.company);
+          },
+          (err: HttpErrorResponse) => {
+            if (err.error instanceof Error) {
+              console.log('Client-side error occured.');
+            } else {
+              console.log('Server-side error occured.');
+            }
+          }
+        );
+        this.timeLeft--;
+      } else {
+        this.timeLeft = 60;
+      }
+    }, 5000)
 
 
     // Tutaj jest przykładowa implementacja podpowiedzi wyszukiwania
@@ -108,6 +135,7 @@ export class MapComponent implements OnInit {
       type: 'store'
     }, this.callback);
   }
+
 
   // Tutaj jest przykładowa implementacja wyszukiwania restauracji w okolicy
   public onClickRestaurants(event) {
