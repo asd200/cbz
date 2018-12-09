@@ -2,6 +2,26 @@ agm-map {
   height: 100vh;
 }
 
+.buttons-wrapper {
+  position: absolute;
+  margin: 10px;
+  z-index: 10;
+
+  button {
+    margin-right: 5px;
+  }
+}
+
+.search-wrapper {
+  width: 100%;
+  position: absolute;
+  display: block;
+  top: 0;
+  padding: 0;
+  z-index: 10;
+  background: white;
+}
+
 .info-wrapper {
   width: 100%;
   position: absolute;

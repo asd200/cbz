@@ -2,12 +2,14 @@ import {Component, ElementRef, NgZone, OnInit, ViewChild} from '@angular/core';
 import {AngularFireDatabase} from "@angular/fire/database";
 import {FormBuilder, FormGroup} from "@angular/forms";
 import {animate, style, transition, trigger} from "@angular/animations";
-import {map} from "rxjs/operators";
+import {filter, map} from "rxjs/operators";
 import {Observable} from "rxjs";
 import {MapsAPILoader} from '@agm/core';
 import {HttpClient, HttpErrorResponse} from '@angular/common/http';
 import {} from 'googlemaps';
-import {google} from "@agm/core/services/google-maps-types";
+import {forEach} from "@angular/router/src/utils/collection";
+import {log} from "util";
+import {bind} from "@angular/core/src/render3";
 
 interface UserResponse {
   login: string;
@@ -23,8 +25,8 @@ export interface DisabilityFlags {
 
 
 export interface Coordinations {
-  lat: Number;
-  lng: Number;
+  lat: number;
+  lng: number;
 }
 
 export interface Address {
@@ -73,13 +75,14 @@ export class MapComponent implements OnInit {
 
   currentLocation: Coordinations;
   destination: Coordinations;
-  currentMapViewLatitude: Number;
-  currentMapViewLongitude: Number;
+  currentMapViewLatitude: number;
+  currentMapViewLongitude: number;
   markerIsClicked: boolean = false;
   wrapperMarkerInfo: Poi;
 
   form: FormGroup;
   poiList$: Observable<{}>;
+  poiPlacesList: any = [];
 
   @ViewChild('agmMap') agmMapElement: ElementRef;
   @ViewChild('search') public searchElement: ElementRef;
@@ -108,78 +111,19 @@ export class MapComponent implements OnInit {
       })
     );
 
-
-    // Przykład REST API - Get
-    this.http.get<UserResponse>('https://api.github.com/users/seeschweiler').subscribe(
-      data => {
-        console.log('User Login: ' + data.login);
-        console.log('Bio: ' + data.bio);
-        console.log('Company: ' + data.company);
-      },
-      (err: HttpErrorResponse) => {
-        if (err.error instanceof Error) {
-          console.log('Client-side error occured.');
-        } else {
-          console.log('Server-side error occured.');
-        }
-      }
-    );
-
-    // Przykład REST API - Post
-    const req = this.http.post('http://jsonplaceholder.typicode.com/posts', {
-      title: 'foo',
-      body: 'bar',
-      userId: 1
-    })
-      .subscribe(
-        res => {
-          console.log(res);
-        },
-        err => {
-          console.log('Error occured');
-        }
-      );
-
-    // Przykładowa implementacja timera, który regularnie łączy się z zewnętrznym API
-    // w naszym przypadku można byłoby tak zrobić update lokalizacji
-    this.interval = setInterval(() => {
-      if (this.timeLeft > 0) {
-        this.http.get<UserResponse>('https://api.github.com/users/seeschweiler').subscribe(
-          data => {
-            console.log('User Login: ' + data.login);
-            console.log('Bio: ' + data.bio);
-            console.log('Company: ' + data.company);
-          },
-          (err: HttpErrorResponse) => {
-            if (err.error instanceof Error) {
-              console.log('Client-side error occured.');
-            } else {
-              console.log('Server-side error occured.');
-            }
-          }
-        );
-        this.timeLeft--;
-      } else {
-        this.timeLeft = 60;
-      }
-    }, 5000)
-
-
     // Tutaj jest przykładowa implementacja podpowiedzi wyszukiwania
-    this.mapsAPILoader.load().then(() => {
-      const autocomplete = new google.maps.places.Autocomplete(this.searchElement.nativeElement, {types: ['address']});
-      autocomplete.addListener('place_changed', () => {
-        this.ngZone.run(() => {
-          const place: any = autocomplete.getPlace();
-
-          console.log(place);
-
-          if (place.geometry === undefined || place.geometry === null) {
-            return;
-          }
-        });
-      });
-    });
+    // this.mapsAPILoader.load().then(() => {
+    //   const autocomplete = new google.maps.places.Autocomplete(this.searchElement.nativeElement, {types: ['address']});
+    //   autocomplete.addListener('place_changed', () => {
+    //     this.ngZone.run(() => {
+    //       const place: any = autocomplete.getPlace();
+    //
+    //       if (place.geometry === undefined || place.geometry === null) {
+    //         return;
+    //       }
+    //     });
+    //   });
+    // });
 
   }
 
@@ -188,38 +132,40 @@ export class MapComponent implements OnInit {
   }
 
 
-  // Odpowiedz na zapytanie 'Nearby search'
-  private callback(results, status) {
-    console.log('Status ' + status);
-    if (status === google.maps.places.PlacesServiceStatus.OK) {
-      console.log(results);
-      for (let i = 0; i < results.length; i++) {
-        console.log(results[i]);
-        console.log('Lat: ' + results[i].geometry.location.lat());
-        console.log('Lng: ' + results[i].geometry.location.lng());
-      }
-    }
-  }
+//   // Odpowiedz na zapytanie 'Nearby search'
+//   public callback(results, status) {
+// console.log(this.poiPlaces)
+//     if (status === google.maps.places.PlacesServiceStatus.OK) {
+//       const poiPlacesList: any = {};
+//       for (let i = 0; i < results.length; i++) {
+//         const lat = results[i].geometry.location.lat().toString();
+//         const lng = results[i].geometry.location.lng().toString();
+//         // this.poiPlacesList.push({ lat: lat, lng: lng });
+//         this.poiPlacesList[i] ={lat: lat, lng: lng}
+//       }
+//       console.log(poiPlacesList)
+//     }
+//   }
 
   // Tutaj jest przykładowa implementacja wyszukiwania sklepów w okolicy
-  public onClickStores(event) {
+  public onClickPlace(type) {
+    this.poiPlacesList = []
     const myMap = new google.maps.places.PlacesService(this.gmapElement.nativeElement);
     myMap.nearbySearch({
       location: new google.maps.LatLng(this.currentLocation.lat, this.currentLocation.lng),
-      radius: 400,
-      type: 'store'
-    }, this.callback);
-  }
-
-
-  // Tutaj jest przykładowa implementacja wyszukiwania restauracji w okolicy
-  public onClickRestaurants(event) {
-    const myMap = new google.maps.places.PlacesService(this.gmapElement.nativeElement);
-    myMap.nearbySearch({
-      location: new google.maps.LatLng(this.currentLocation.lat, this.currentLocation.lng),
-      radius: 400,
-      type: 'restaurant'
-    }, this.callback);
+      radius: 2000,
+      type: type
+    }, (results, status) => {
+      if (status === google.maps.places.PlacesServiceStatus.OK) {
+        for (let i = 0; i < results.length; i++) {
+          const lat = results[i].geometry.location.lat().toString();
+          const lng = results[i].geometry.location.lng().toString();
+          // this.poiPlacesList.push({ lat: lat, lng: lng });
+          this.poiPlacesList[i] = {lat: lat, lng: lng}
+        }
+        console.log(this.poiPlacesList)
+      }
+    });
   }
 
   public getUserLocation() {
@@ -250,6 +196,18 @@ export class MapComponent implements OnInit {
       }, {
         name: 'deaf',
         checked: true,
+      }, {
+        name: 'sign_language',
+        checked: true,
+      }, {
+        name: 'blind',
+        checked: true,
+      }, {
+        name: 'parking',
+        checked: true,
+      }, {
+        name: 'wc',
+        checked: true,
       }],
     };
 
@@ -276,10 +234,10 @@ export class MapComponent implements OnInit {
   }
 
   public mapClick(event) {
-    setTimeout(() => {
-      // @ts-ignore
-      console.log(this.agmMapElement._elem.nativeElement.querySelector('.poi-info-window .title').innerHTML);
-    });
+    // setTimeout(() => {
+    //   // @ts-ignore
+    //   console.log(this.agmMapElement._elem.nativeElement.querySelector('.poi-info-window .title').innerHTML);
+    // });
     // this.agmMapElement.nativeElement.querySelector('.asd');
 
     // console.log(event);
