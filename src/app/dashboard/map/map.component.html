@@ -1,3 +1,9 @@
+<div>
+  <input type="text" placeholder="Search for location" autocorrect="off" spellcheck="false" #search>
+</div>
+<button (click)="onClickStores($event)">Stores!</button>
+<button (click)="onClickRestaurants($event)">Restaurants!</button>
+
 <agm-map #agmMap [zoom]="12" [latitude]="currentMapViewLatitude" [longitude]="currentMapViewLongitude"
          (mapDblClick)="addPoiToDatabase($event)"
          [zoomControl]="false" [streetViewControl]="false" (mapClick)="mapClick($event)" [usePanning]="true"
